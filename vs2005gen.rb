@@ -29,23 +29,26 @@ class VS2005Generator
     paths
   end
 
-  def gen_files(paths, first = '', parent = '')
+  def gen_files(paths, parent = '', start_out = false)
     result = ''
+    filter_opened = false
+    if start_out && result == ''
+      result += "<Filter Name=\"#{parent}\">\n"
+      filter_opened = true
+    end
     paths.each do |k, v|
       if v.is_a? String
-        if first != '' && result == ''
-          result += "<Filter Name=\"#{parent}\">\n"
-        end
         result += "<File RelativePath=\"#{normalize_path(v, true)}\"></File>\n"
+        start_out = true
       end
-    end
-    if first != ''
-      result += "</Filter>\n"
     end
     paths.each do |k, v|
       if v.is_a? Hash
-        result += gen_files(v, result, k)
+        result += gen_files(v, k, start_out)
       end
+    end
+    if filter_opened
+      result += "</Filter>\n"
     end
     result
   end
