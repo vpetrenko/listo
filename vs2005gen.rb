@@ -2,14 +2,11 @@ $:[$:.length] = 'listo/'
 
 require 'project'
 require 'uuid'
-require 'xmlbuilder'
+require 'builder'
 
 
 class VS2005Generator
   def initialize
-    @conf_template = Templater.new('listo/templates/vcproj/conf.xml')
-    @library_tool_template = Templater.new('listo/templates/vcproj/library-tool.xml')
-    @linker_tool_template = Templater.new('listo/templates/vcproj/linker-tool.xml')
   end
   def prepare_files(sources)
     paths = {}
@@ -29,124 +26,142 @@ class VS2005Generator
     paths
   end
 
-  def gen_files(paths, parent = '', start_out = false)
+  def gen_files(xml, paths, parent = '', start_out = false)
     result = ''
     filter_opened = false
     if start_out && result == ''
-      result += "<Filter Name=\"#{parent}\">\n"
-      filter_opened = true
-    end
+      result = '1'
+      xml.Filter :Name => parent do
+
+      paths.each do |k, v|
+        if v.is_a? String
+          xml.File :RelativePath => normalize_path(v, true)
+          start_out = true
+        end
+      end
+      paths.each do |k, v|
+        if v.is_a? Hash
+          gen_files(xml, v, k, start_out)
+        end
+      end
+      end
+  else
     paths.each do |k, v|
       if v.is_a? String
-        result += "<File RelativePath=\"#{normalize_path(v, true)}\"></File>\n"
+        xml.File :RelativePath => normalize_path(v, true)
         start_out = true
       end
     end
     paths.each do |k, v|
       if v.is_a? Hash
-        result += gen_files(v, k, start_out)
+        gen_files(xml, v, k, start_out)
       end
     end
-    if filter_opened
-      result += "</Filter>\n"
-    end
-    result
+  end
   end
 
-  def gen_confs(project)
-    confs = ''
+
+  def decor_path(path)
+    path.gsub(/\//, '\\')
+  end
+
+  def gen_configurations(xml, project)
     project.confs.each do |configuration|
-      @conf_template.reset
       config = configuration[1]
       config.flags.set(Maker::WIN32_X86)
-      @conf_template.subs('ConfName', config.name)
       output_dir = config.template.format_single(Maker::OUT_DIR, config.flags)
       if output_dir.index('./') != 0
-        output_dir = project.rev_path_prefix + output_dir 
+        output_dir = project.rev_path_prefix + output_dir
       end
-      @conf_template.subs_path('OutputDirectory', output_dir)
-      @conf_template.subs_path('IntermediateDirectory',
-                               config.template.format_single(Maker::TEMP_DIR, config.flags, project.rev_path_prefix))
-      @conf_template.subs_path('AdditionalIncludeDirectories',
-        config.template.format(Maker::INCLUDE_DIRS, config.flags, ';', project.rev_path_prefix))
 
-      @conf_template.subs('PreprocessorDefinitions',
-                          config.template.format(Maker::DEFINES, config.flags, ';'))
+      config_type = '1' if config.flags.has?(Maker::APP)
+      config_type = '4' if config.flags.has?(Maker::LIB)
 
-      if config.flags.has?(Maker::APP)
-        # Linker
-        @conf_template.subs('ConfigurationType', '1')
-        @linker_tool_template.reset
-        @linker_tool_template.subs_path('OutputFile', config.template.format_single(Maker::OUT_FILE, config.flags, output_dir, '.exe'))
-        @linker_tool_template.subs_path('AdditionalDependencies', config.template.format(
-                Maker::DEPS, config.flags, ' ', '', '.lib'))
-        @linker_tool_template.subs_path('AdditionalLibraryDirectories', config.template.format(
-                Maker::LIB_DIRS, config.flags, ';', project.rev_path_prefix))
-        @conf_template.subs('CustomTools', @linker_tool_template.result)
-      elsif config.flags.has?(Maker::LIB)
-        # Library
-        @conf_template.subs('ConfigurationType', '4')
-        @library_tool_template.reset
-        @library_tool_template.subs_path('OutputFile', config.template.format_single(Maker::OUT_FILE, config.flags, output_dir, '.lib'))
-        @conf_template.subs('CustomTools', @library_tool_template.result)
+      xml.Configuration :Name => "#{config.name}|Win32",
+          :OutputDirectory => decor_path(output_dir),
+          :IntermediateDirectory => decor_path(config.template.format_single(Maker::TEMP_DIR, config.flags, project.rev_path_prefix)),
+          :ConfigurationType => config_type,
+          :InheritedPropertySheets => "",
+          :CharacterSet => "1"  do
+
+        xml.Tool :Name => "VCPreBuildEventTool"
+        xml.Tool :Name => "VCCustomBuildTool"
+        xml.Tool :Name => "VCXMLDataGeneratorTool"
+        xml.Tool :Name => "VCWebServiceProxyGeneratorTool"
+        xml.Tool :Name => "VCMIDLTool"
+        xml.Tool :Name => "VCCLCompilerTool",
+              :Optimization => "0",
+              :AdditionalIncludeDirectories => decor_path(config.template.format(Maker::INCLUDE_DIRS, config.flags, ';', project.rev_path_prefix)),
+              :PreprocessorDefinitions => config.template.format(Maker::DEFINES, config.flags, ';'),
+              :StringPooling => "true",
+              :MinimalRebuild => "true",
+              :BasicRuntimeChecks => "3",
+              :RuntimeLibrary => "3",
+              :DisableLanguageExtensions => "false",
+              :ForceConformanceInForLoopScope => "true",
+              :RuntimeTypeInfo => "true",
+              :UsePrecompiledHeader => "0",
+              :ProgramDataBaseFileName => "$(OutDir)\\$(ProjectName).pdb",
+              :WarningLevel => "4",
+              :Detect64BitPortabilityProblems => "true",
+              :DebugInformationFormat => "3"
+
+        xml.Tool :Name => "VCManagedResourceCompilerTool"
+        xml.Tool :Name => "VCResourceCompilerTool"
+        xml.Tool :Name => "VCPreLinkEventTool"
+
+        if config.flags.has?(Maker::APP)
+          xml.Tool :Name => "VCLinkerTool",
+				:AdditionalDependencies => decor_path(config.template.format(
+                  Maker::DEPS, config.flags, ' ', '', '.lib')),
+                :OutputFile => decor_path(config.template.format_single(Maker::OUT_FILE, config.flags, output_dir, '.exe')),
+				:LinkIncremental => "2",
+				:AdditionalLibraryDirectories => decor_path(config.template.format(
+                  Maker::LIB_DIRS, config.flags, ';', project.rev_path_prefix)),
+				:GenerateManifest => "true",
+				:GenerateDebugInformation => "true",
+				:SubSystem => "1",
+				:TargetMachine => "1"
+        elsif config.flags.has?(Maker::LIB)
+          xml.Tool :Name => "VCLibrarianTool",
+                   :OutputFile => decor_path(config.template.format_single(Maker::OUT_FILE, config.flags, output_dir, '.lib')),
+                   :IgnoreAllDefaultLibraries => "true"
+        end
+        xml.Tool :Name => "VCALinkTool"
+        xml.Tool :Name => "VCXDCMakeTool"
+        xml.Tool :Name => "VCBscMakeTool"
+        xml.Tool :Name => "VCFxCopTool"
+        xml.Tool :Name => "VCPostBuildEventTool"
       end
-      confs += @conf_template.result
     end
-    confs
   end
 
   def generate_project(project, vcproj_file_name)
-    cpp_files_xml = gen_files(prepare_files(project.cpp_sources))
-    h_files_xml = gen_files(prepare_files(project.h_sources))
-    confs_xml = gen_confs(project)
-    xml.clear()
-    xml.VisualStudioProject :ProjectType => 'Visual C++',
-      :Version => "8,00", :Name => project.name, :ProjectGUID => "{#{project.guid}}",
-	  :RootNamespace => project.name, :Keyword => 'Win32Proj' do
-      Platforms do
-        Platform :Name => 'Win32'
-      end
-      ToolFiles()
-      Configurations do
-        clear_write(confs_xml)
-      end
-      References()
-      Files do
-        Filter :Name => 'Source Files', :Filter => 'cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx', :UniqueIdentifier => '{4FC737F1-C7A5-4376-A066-2A32D752A2FF}' do
-          clear_write(cpp_files_xml)
-        end  
-        Filter :Name => 'Header Files', :Filter => 'h;hpp;hxx;hm;inl;inc;xsd', :UniqueIdentifier => '{93995380-89BD-4b04-88EB-625FBE52EBFB}' do
-          clear_write(h_files_xml)
+    File.open(vcproj_file_name, "w") do |file|
+      xml = Builder::XmlMarkup.new(:indent => 2, :target => file)
+      xml.instruct!
+      xml.VisualStudioProject :ProjectType => 'Visual C++',
+        :Version => "8,00", :Name => project.name, :ProjectGUID => "{#{project.guid}}",
+        :RootNamespace => project.name, :Keyword => 'Win32Proj' do
+        xml.Platforms do
+          xml.Platform :Name => 'Win32'
+        end
+        xml.ToolFiles()
+        xml.Configurations do
+          gen_configurations(xml, project)
+        end
+        xml.References()
+        xml.Files do
+          xml.Filter :Name => 'Source Files', :Filter => 'cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx', :UniqueIdentifier => '{4FC737F1-C7A5-4376-A066-2A32D752A2FF}' do
+            gen_files(xml, prepare_files(project.cpp_sources))
+          end
+          xml.Filter :Name => 'Header Files', :Filter => 'h;hpp;hxx;hm;inl;inc;xsd', :UniqueIdentifier => '{93995380-89BD-4b04-88EB-625FBE52EBFB}' do
+            gen_files(xml, prepare_files(project.h_sources))
+          end
         end
       end
     end
-    File.open(vcproj_file_name, "w") do |file|
-      file.puts xml
-    end
     puts "MSVC Project '#{project.name}' generated at '#{vcproj_file_name}'"
-  end
-end
-
-class Templater
-  attr_reader :result
-
-  def initialize(template)
-    @template = IO.read(template)
-    @result = @template.dup
-  end
-
-  def reset
-    @result = @template.dup
-  end
-
-  def subs(name, value)
-    @result.gsub!('<%=' + name + '%>', value)
-    self
-  end
-
-  def subs_path(name, value)
-    @result.gsub!('<%=' + name + '%>', value.gsub("/", "\\"))
-    self
   end
 end
 

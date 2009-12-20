@@ -68,7 +68,7 @@ class World
     guids = {}
     @projects.each do |project|
       if project[1].guid == ''
-        project[1].guid = UUID.create_random.to_s.upcase!
+        project[1].guid = UUID.create_sha1(project[1].name, UUID.parse('32CA84C8-B9B7-431d-9821-7A7D5921BEC4')).to_s.upcase!
       end
       if project[1].guid[0, 1] == '{'
         project[1].guid = project[1].guid[1, project[1].guid.length - 2]
