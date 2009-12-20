@@ -162,6 +162,11 @@ class Maker
   QT_CONFIG = 'CONFIG'
 
 # External API
+#   Configuration
+  def set_qt_path(path)
+    @world.set_config_variable(:qt_path, path)
+  end
+  
 #   Templates
   def create_template(name)
     @current_template = Template.new(name)

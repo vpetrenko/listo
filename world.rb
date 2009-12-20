@@ -44,10 +44,38 @@ class World
     @slns = []
     @consts = {}
     @configurations = {}
+    @config = {}
 
     Flags.define_group(Maker::APP, Maker::LIB, Maker::DLL)
     Flags.define_group(Maker::DEBUG, Maker::RELEASE)
     Flags.define_group(Maker::WIN32_X86, Maker::UNIX)
+  end
+
+  def set_config_variable(name, value)
+    case name
+      when :qt_path
+      else
+      raise "Unexpected configuration variable setting '#{name}'"
+    end
+    @config[name] = value
+  end
+
+  def get_config_variable(name)
+    if @config.key?(name)
+      return @config[name]
+    else
+      case name
+        when :qt_path
+          if qt_path = find_qt_path != nil
+            @config[:qt_path] = qt_path
+            return qt_path
+          else
+            raise "Could not determine QT path"
+          end
+        else
+          raise "Unexpected configuration variable getting '#{name}'"
+      end
+    end  
   end
 
   def explore

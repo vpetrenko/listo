@@ -192,7 +192,7 @@ def adv_traverse(path, mask, include, exclude, &block)
     if FileTest.directory?(entry) then
       if include.include?(base_name) || include.include?('*')
         unless exclude.include?(base_name) || exclude.include?('*')
-          traverse("#{source_dir}/#{base_name}", mask, &block)
+          adv_traverse("#{source_dir}/#{base_name}", mask, include, exclude, &block)
         end
       end
     end
@@ -219,7 +219,46 @@ def find_files(path, mask, &block)
       block.call(name)
     end
   end
+end
 
+def is_windows
+  RUBY_PLATFORM.index('win32') != nil  
+end
+
+def is_unix
+  !is_windows  
+end
+
+def find_qt_path()
+  result = nil
+  result = ENV['QTDIR'] if ENV.key?('QTDIR')
+  if is_windows
+    require 'dl'
+    kernel32 = DL.dlopen("kernel32")
+    get_logical_drives = kernel32['GetLogicalDrives', 'L']
+    get_drive_type = kernel32['GetDriveTypeA','IS']
+    r, rs = get_logical_drives.call()
+    drives = []
+    (0..26).each do |x|
+      if (r & 1 << x) > 0
+        drives << (?A + x).chr
+      end
+    end
+    fixed_drives = []
+    drives.each do |d|
+      r, rs = get_drive_type.call(d + ':\\')
+    # DRIVE_FIXED = 3
+      if r == 3
+        fixed_drives << d
+      end
+    end
+    fixed_drives.each do |d|
+      result = d + ':\\Qt' if File.exists?(d + ':\\Qt\bin')
+    end
+  else
+  end
+  puts "QT found in #{result}" if result != nil
+  result
 end
 
 def normalize_path(path, backslash)
