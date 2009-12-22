@@ -26,38 +26,42 @@ class VS2005Generator
     paths
   end
 
-  def gen_files(xml, paths, parent = '', start_out = false)
-    result = ''
-    filter_opened = false
-    if start_out && result == ''
-      result = '1'
-      xml.Filter :Name => parent do
+  def gen_files(xml, project, paths, parent = '')
+    if paths == nil
+      return
+    end
 
-      paths.each do |k, v|
-        if v.is_a? String
-          xml.File :RelativePath => normalize_path(v, true)
-          start_out = true
-        end
+    if paths.length == 1 && !paths.first[1].is_a?(String)
+      gen_files(xml, project, paths.first[1], parent)
+      return
+    end
+
+    if parent != ''
+      xml.Filter :Name => parent do
+        gen_files(xml, project, paths, '')
       end
-      paths.each do |k, v|
-        if v.is_a? Hash
-          gen_files(xml, v, k, start_out)
-        end
-      end
-      end
-  else
+    else
     paths.each do |k, v|
       if v.is_a? String
-        xml.File :RelativePath => normalize_path(v, true)
-        start_out = true
+        xml.File :RelativePath => decor_path(v) do
+          if File.extname(v) == '.c'
+            project.confs.each do |conf|
+              xml.FileConfiguration :Name => "#{conf[1].name}|Win32" do
+                xml.Tool :Name => 'VCCLCompilerTool', :CompileAs => '2'
+              end
+            end
+          end
+        end
       end
     end
-    paths.each do |k, v|
-      if v.is_a? Hash
-        gen_files(xml, v, k, start_out)
+    if parent == ''
+      paths.each do |k, v|
+        if v.is_a? Hash
+          gen_files(xml, project, v, k)
+        end
       end
     end
-  end
+    end
   end
 
 
@@ -152,11 +156,11 @@ class VS2005Generator
         end
         xml.References()
         xml.Files do
-          xml.Filter :Name => 'Source Files', :Filter => 'cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx', :UniqueIdentifier => '{4FC737F1-C7A5-4376-A066-2A32D752A2FF}' do
-            gen_files(xml, prepare_files(project.cpp_sources))
-          end
           xml.Filter :Name => 'Header Files', :Filter => 'h;hpp;hxx;hm;inl;inc;xsd', :UniqueIdentifier => '{93995380-89BD-4b04-88EB-625FBE52EBFB}' do
-            gen_files(xml, prepare_files(project.h_sources))
+            gen_files(xml, project, prepare_files(project.h_sources))
+          end
+          xml.Filter :Name => 'Source Files', :Filter => 'cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx', :UniqueIdentifier => '{4FC737F1-C7A5-4376-A066-2A32D752A2FF}' do
+            gen_files(xml, project, prepare_files(project.cpp_sources))
           end
         end
       end

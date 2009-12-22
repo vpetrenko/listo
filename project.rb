@@ -193,6 +193,10 @@ class Maker
     @current_project.add_h_sources(FileSet.h(Pathname.new(@current_project.path) + path, include, exclude).files)
   end
 
+  def add_cpp_file(path)
+    @current_project.add_cpp_sources([Pathname.new(@current_project.path) + path])
+  end
+
   def use_template(name)
     @current_project.use_template(name)
   end
