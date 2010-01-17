@@ -1,20 +1,4 @@
-# Modules
-module ComparableByValue
-  def ==(other)
-    Marshal.dump(self) == Marshal.dump(other)
-  end
-
-  def hash
-    Marshal.dump(self).hash
-  end
-end
-
-module DeepCopy
-  def clone
-    Marshal.load(Marshal.dump(self))
-  end
-end
-
+require 'modules'
 # Classes
 #   Flags class
 class Flags
@@ -23,23 +7,37 @@ class Flags
 
   @@groups = []
 
-  def initialize(flags = nil)
+  def initialize(*flags)
     @flags = {}
-    if flags != nil
-      flags.each do |f|
-        if f.class === Enumerable
-          f.each do |ff|
-            @flags[ff] = nil
+    flags.each do |f|
+      if f.is_a? Flags
+        f.flags_hash.each_key {|ff| add_flag(ff)}
+      elsif f.is_a? Array
+        f.each do |ff|
+          if ff.is_a? Flags
+            ff.flags_hash.each_key {|fff| add_flag(fff)}
+          else
+            add_flag(ff)
           end
-        else
-          @flags[f] = nil
         end
+      else
+        add_flag(f)
       end
     end
   end
 
+  def add_flag(flag)
+    raise "Could not add flag which is not symbol (#{flag}, #{flag.class}})." unless flag.is_a? Symbol
+    @flags[flag] = nil
+  end
+
+
   def Flags.define_group(*flags)
-    @@groups << flags
+    flgs = []
+    flags.each do |f|
+      flgs << f.flags_hash.first[0]
+    end
+    @@groups << flgs
   end
 
   def flags_hash
@@ -51,7 +49,11 @@ class Flags
   end
 
   def has?(flag)
-    @flags.key?(flag)
+    if flag.is_a? Flags
+      @flags.key?(flag.flags_hash.first[0])
+    else
+      @flags.key?(flag)
+    end
   end
 
   def reset()
@@ -63,8 +65,26 @@ class Flags
       reset()
     else
       flags.each do |f|
-        @flags[f] = nil
+        if f.is_a? Flags
+          f.flags_hash.each_key {|k| add_flag(k)}
+        elsif f.is_a? Array
+          f.each do |k|
+            if k.is_a? Flags
+              k.flags_hash.each_key {|kk| add_flag(kk)}
+            else
+              add_flag(k)
+            end  
+          end
+        else
+          add_flag(f)
+        end
       end
+    end
+  end
+
+  def add(flags)
+    flags.flags_hash.each_key do |f|
+      add_flag(f)
     end
   end
 
@@ -75,10 +95,10 @@ class Flags
   end
 
   def include?(other)
-    result = false
+    result = true
     if other.is_a? Flags
-      other.flags_hash.keys.each do |f|
-        result = true if @flags.include?(f)
+      other.flags_hash.each_key do |f|
+        result = false unless @flags.include?(f)
       end
     else
       raise 'Unexpected include?'
@@ -87,6 +107,7 @@ class Flags
   end
 
   def match?(other)
+#    World.log.debug "Matching #{self} with #{other}."
     return true if other == nil
     raise 'Unexpected match' unless other.is_a? Flags
     return true if empty?
@@ -95,6 +116,7 @@ class Flags
         if g.include?(f)
           other.flags_hash.keys.each do |of|
             if g.include?(of) && of != f
+ #             World.log.debug "Result false."
               return false
             end
           end
@@ -261,12 +283,36 @@ def find_qt_path()
   result
 end
 
-def normalize_path(path, backslash)
-  if (backslash)
-    path.gsub('/', '\\')
+def qt_bin_path
+  normalize_path(Pathname.new(World.get_config_variable(:qt_path)) + 'bin')
+end
+
+def qt_moc
+  if is_windows
+    normalize_path(Pathname.new(World.get_config_variable(:qt_path)) + 'bin' + 'moc.exe')
+  elsif is_unix
+    normalize_path(Pathname.new(World.get_config_variable(:qt_path)) + 'bin' + 'moc')
   else
-    path.gsub('\\', '/')
+    raise 'Unexpected platform.'
+ end
+end
+
+def decorate_path(path)
+  path.to_s.gsub(/\//, '\\')
+end
+
+def param_subs!(string, name, value)
+  string.gsub!('<%=' + name + '%>', value)
+end
+
+def normalize_path(path)
+  if is_windows
+    decorate_path(path.to_s)
+  else
+    path.to_s
   end
 end
+
+
 
 

@@ -39,7 +39,7 @@ class Sln2005Generator
 
       project.projects.each do |p|
         guid = p.guid
-        p.confs.each do |c|
+        p.configurations.each do |c|
           conf_name = c[0]
           file.puts "{#{guid}}.#{conf_name}|Win32.ActiveCfg = #{conf_name}|Win32"
           file.puts "{#{guid}}.#{conf_name}|Win32.Build.0 = #{conf_name}|Win32"
