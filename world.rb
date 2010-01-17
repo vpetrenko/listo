@@ -158,7 +158,8 @@ class World
     else
       case name
         when :qt_path
-          if qt_path = find_qt_path != nil
+	  qt_path = find_qt_path
+          if qt_path != nil
             @@config[:qt_path] = qt_path
             return qt_path
           else

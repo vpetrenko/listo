@@ -280,7 +280,7 @@ def find_qt_path()
   else
   end
   puts "QT found in #{result}" if result != nil
-  result
+  undecorate_path(result)
 end
 
 def qt_bin_path
@@ -299,6 +299,10 @@ end
 
 def decorate_path(path)
   path.to_s.gsub(/\//, '\\')
+end
+
+def undecorate_path(path)
+  path.to_s.gsub(/\\/, '/')
 end
 
 def param_subs!(string, name, value)
