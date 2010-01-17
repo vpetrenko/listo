@@ -148,6 +148,7 @@ class VS2005Generator
       storage.path = project.path_prefix
       storage.fill(project.actions, flags)
       storage.fill(config.actions, flags)
+      puts "#{project.name} - #{config.name}"
       World.postprocess_storage(project, config, storage)
       output_dir = storage.get_decorated_path(Maker::OUT_DIR)
 
