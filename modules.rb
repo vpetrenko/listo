@@ -29,7 +29,7 @@ module PathContext
   end
 
   def path_prefix
-	'../' * @path.to_s.count('/')
+	'../' * @path.to_s.chomp('/').count('/')
   end
 
   def decorated_path_prefix
@@ -38,15 +38,18 @@ module PathContext
 end
 
 module ActionStorage
-  attr_accessor :actions
+#  attr_accessor :actions
+
+  def actions
+    @actions ||= []
+  end
 
   def do(action, params, flags)
-    @actions = [] if @actions == nil
-    @actions << ConstAction.new(action, params, flags, self)
+    actions << ConstAction.new(action, params, flags, self)
   end
 
   def subs_params!(dict)
-    @actions.each do |a|
+    actions.each do |a|
       a.subs_params!(dict)
     end
   end

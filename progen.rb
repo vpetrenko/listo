@@ -73,43 +73,28 @@ class ProGenerator
       file.puts 'CONFIG += staticlib' if debug_config.flags.has? Maker::LIB
       file.puts 'CONFIG += qt' if debug_config.flags.has? Maker::APP
 
-      d_win_storage = ConstStorage.new
-      flags = debug_config.flags
-      flags.set(Maker::WIN32_X86)
-      d_win_storage.path = project.path_prefix
-      d_win_storage.fill(project.actions, flags)
-      d_win_storage.fill(debug_config.actions, flags)
-      World.postprocess_storage(project, debug_config, d_win_storage)
-
-      r_win_storage = ConstStorage.new
-      flags = release_config.flags
-      flags.set(Maker::WIN32_X86)
-      r_win_storage.path = project.path_prefix
-      r_win_storage.fill(project.actions, flags)
-      r_win_storage.fill(release_config.actions, flags)
-      World.postprocess_storage(project, release_config, r_win_storage)
-
-      d_unix_storage = ConstStorage.new
-      flags = debug_config.flags
-      flags.set(Maker::UNIX)
-      d_unix_storage.path = project.path_prefix
-      d_unix_storage.fill(project.actions, flags)
-      d_unix_storage.fill(debug_config.actions, flags)
-      World.postprocess_storage(project, debug_config, d_unix_storage)
-
-      r_unix_storage = ConstStorage.new
-      flags = release_config.flags
-      flags.set(Maker::UNIX)
-      r_unix_storage.path = project.path_prefix
-      r_unix_storage.fill(project.actions, flags)
-      r_unix_storage.fill(release_config.actions, flags)
-      World.postprocess_storage(project, release_config, r_unix_storage)
-
       file.puts 'win32-msvc* {'
       file.puts "        GUID = #{project.guid}"
       file.puts '        QMAKE_CXXFLAGS_DEBUG += -Zc:wchar_t'
       file.puts '        QMAKE_CXXFLAGS_RELEASE += -Zc:wchar_t'
       file.puts '}'
+
+      process = lambda do |config,flag|
+        storage = ConstStorage.new
+        fl = config.flags
+        fl.set(flag)
+        storage.path = project.path_prefix
+        storage.fill(project.actions, fl)
+        storage.fill(config.actions, fl)
+        World.postprocess_storage(project, config, storage)
+        storage
+      end
+      d_win_storage = process.call(debug_config, Maker::WIN32_X86)
+      r_win_storage = process.call(release_config, Maker::WIN32_X86)
+
+      d_unix_storage = process.call(debug_config, Maker::UNIX)
+      r_unix_storage = process.call(release_config, Maker::UNIX)
+
 
       out_configuration(file, d_win_storage, project, debug_config, 'win32')
       out_configuration(file, r_win_storage, project, release_config, 'win32')

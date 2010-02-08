@@ -112,23 +112,18 @@ class Maker
 
   def fileset(include, exclude)
     current_path_name = Pathname.new(@current_project.path)
-    include = [include] unless include.is_a? Array
-    exclude = [exclude] unless exclude.is_a? Array
-    include_mask = []
-    include.each do |m|
-      include_mask << (current_path_name + m).to_s 
+    include, exclude = [include].flatten, [exclude].flatten
+    include.map! do |m|
+      (current_path_name + m).to_s
     end
-    exclude_mask = []
-    exclude.each do |m|
-      exclude_mask << (current_path_name + m).to_s
+    exclude.map! do |m|
+      (current_path_name + m).to_s
     end
-    exclude_mask << '**/.svn/**/*'
-    exclude_mask << '**/_svn/**/*'
+    exclude << '**/.svn/**/*'
+    exclude << '**/_svn/**/*'
 
-#    puts exclude_mask.join(' ')
-#    puts exclude_mask.join(' ')
-    incl_files = Dir.glob(include_mask)
-    excl_files = Dir.glob(exclude_mask)
+    incl_files = Dir.glob(include)
+    excl_files = Dir.glob(exclude)
 #    puts excl_files 
     result = []
     (incl_files - excl_files).each do |v|
@@ -152,6 +147,23 @@ class Maker
       end
     end
     @current_project.do(ConstAction::ADD, real_values, flags)
+  end
+
+  def replace(key, *values)
+    real_values = [key]
+    flags = Flags.new()
+    values.each do |v|
+      if v.is_a?(Flags)
+        flags.add(v)
+      elsif v.is_a?(String)
+        real_values << v
+      elsif v.is_a?(Array)
+        v.each do |vv|
+          real_values << vv
+        end
+      end
+    end
+    @current_project.do(ConstAction::REPLACE, real_values, flags)
   end
 
   def use_template(name)
