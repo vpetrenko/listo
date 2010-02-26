@@ -50,7 +50,7 @@ class Flags
 
   def has?(flag)
     if flag.is_a? Flags
-      @flags.key?(flag.flags_hash.first[0])
+      @flags.key?(flag.flags_hash.keys[0])
     else
       @flags.key?(flag)
     end
