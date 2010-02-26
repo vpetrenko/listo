@@ -35,7 +35,7 @@ class Flags
   def Flags.define_group(*flags)
     flgs = []
     flags.each do |f|
-      flgs << f.flags_hash.first[0]
+      flgs << f.flags_hash.keys[0]
     end
     @@groups << flgs
   end
