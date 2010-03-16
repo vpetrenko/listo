@@ -18,6 +18,7 @@ class VS2005Generator
     @project = project
     @xml = nil
     @generated_files = {}
+    @current_storage = nil
   end
 
   def prepare_files(sources)
@@ -40,9 +41,11 @@ class VS2005Generator
 
   def need_moc(file_path)
 #    puts "Checking file #{Pathname.new(@project.path) + file_path}"
-    File.open(Pathname.new(@project.path) + file_path, "r") do |file|
-      file.readlines.each do |line|
-        return true if line.match(/(Q_|QOM_)(OBJECT|GADGET|M_OBJECT)/) != nil
+    if @current_storage.has?(Maker::GENERATOR_TARGET) && @current_storage.get_array(Maker::GENERATOR_TARGET).find('Qt') != nil
+      File.open(Pathname.new(@project.path) + file_path, "r") do |file|
+        file.readlines.each do |line|
+          return true if line.match(/(Q_|QOM_)(OBJECT|GADGET|M_OBJECT)/) != nil
+        end
       end
     end
     false
@@ -224,6 +227,7 @@ class VS2005Generator
     File.open(vcproj_file_name, "w") do |file|
       storage = ConstStorage.new
       storage.fill(project.actions, project.flags)
+      @current_storage = storage
       xml = Builder::XmlMarkup.new(:indent => 2, :target => file)
       xml.instruct!
       @xml = xml

@@ -3,6 +3,7 @@ class ConstAction
   ADD = :add
 #  REMOVE = :remove
   REPLACE = :replace
+  CLEAR = :clear
 #  SET = :set
 #  SMART_REPLACE = :smart_replace
   USE_TEMPLATE = :use_template
@@ -55,6 +56,8 @@ class ConstStorage
               @consts[a.params[0]] << Const.new(a.params[1,a.params.length], a.context)
           when ConstAction::REPLACE
               @consts[a.params[0]] = [Const.new(a.params[1,a.params.length], a.context)]
+          when ConstAction::CLEAR
+              @consts.delete(a.params[0])
           when ConstAction::USE_TEMPLATE
               fill(Template.get(a.params[0]).actions, flags)
           else

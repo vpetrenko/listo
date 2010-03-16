@@ -52,12 +52,18 @@ class Maker
   FILES_DATA = :DATA
   FILES_QRC = :QRC
   FILES_RESOURCES = :RES
+  FILES_UI = :ui
 
 #
   PARAM_OUT_DIR = 'OUT_DIR'
   PARAM_CONFIG = 'CONFIG'
   PARAM_PLATFORM = 'PLATFORM'
   PARAM_PROJECT = 'PROJECT'
+
+# Generator
+  GENERATOR_TARGET = :GeneratorTarget
+  GENERATOR_COMPONENTS_ADD = :GeneratorComponentsAdd
+  GENERATOR_COMPONENTS_REMOVE = :GeneratorComponentsRemove
 
 # External API
 #   Configuration
@@ -98,6 +104,17 @@ class Maker
       end
     end
     @current_template.do(ConstAction::REPLACE, real_values, flags, self)
+  end
+
+  def template_clear(key, *values)
+  real_values = [key]
+  flags = Flags.new()
+  values.each do |v|
+    if v.is_a?(Flags)
+      flags.add(v)
+    end  
+  end
+    @current_template.do(ConstAction::CLEAR, real_values, flags)
   end
 
 #   Projects
