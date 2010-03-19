@@ -155,7 +155,7 @@ class ProGenerator
         end
       end  
 
-      if debug_config.flags.has? Maker::APP
+      if debug_config.flags.has?(Maker::APP)
         libs = ''
         project.dep_projects.each do |d|
           libs += '-l' + d.name + "\\\n"
@@ -165,16 +165,36 @@ class ProGenerator
           file.puts "LIBS +=\\\n" + libs + "\n\n"
         end
 
-        pre_libs = ''
-        project.dep_projects.each do |d|
-          pre_libs += project.path_prefix + 'lib/win32-x86-' + debug_config.name.downcase + '/lib' + d.name + ".a \\\n"
+        gen_predeps = lambda do |config, platform_name|
+          pre_libs = ''
+          project.dep_projects.each do |d|
+            if platform_name == 'win32'
+              pre_libs += project.path_prefix + 'lib/win32-x86-' + config.name.downcase + '/' + d.name + ".lib \\\n"
+            elsif platform_name == 'unix'
+              pre_libs += project.path_prefix + 'lib/win32-x86-' + config.name.downcase + '/lib' + d.name + ".a \\\n"
+            end
+          end
+          if pre_libs.length != 0
+            pre_libs = pre_libs[0, pre_libs.length - 2]
+            file.puts "CONFIG(#{config.name.downcase}, debug|release) {"
+
+            if platform_name == 'win32'
+               file.puts "win32 {\n"
+               file.puts 'PRE_TARGETDEPS += ' + pre_libs
+               file.puts "}\n"
+            elsif platform_name == 'unix'
+              file.puts "unix {\n"
+              file.puts 'PRE_TARGETDEPS += ' + pre_libs
+              file.puts "}\n"
+            end
+            file.puts "}"
+          end
+
         end
-        if pre_libs.length != 0
-          pre_libs = pre_libs[0, pre_libs.length - 2]
-          file.puts 'unix {'
-          file.puts 'PRE_TARGETDEPS += ' + pre_libs
-          file.puts '}'
-        end
+        gen_predeps.call(debug_config, 'win32')
+        gen_predeps.call(debug_config, 'unix')
+
+
       end
     end
   end

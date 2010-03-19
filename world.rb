@@ -56,7 +56,24 @@ class World
 
   def explore
     World.log.debug "Starting explore()"
-    traverse('.', /.+(\.listo)$/) do	|maker|
+
+    traverse_listo = lambda do |include, exclude|
+      include, exclude = [include].flatten, [exclude].flatten
+      exclude << '**/.svn/**/*'
+      exclude << '**/_svn/**/*'
+
+      incl_files = Dir.glob(include)
+      excl_files = Dir.glob(exclude)
+  #    puts excl_files
+      result = []
+      res = incl_files - excl_files
+      res.each do |v|
+        result << v unless File.directory?(v)
+      end
+      result
+    end
+
+    traverse_listo.call('./**/*.listo', './source/3rd/**/*').each do	|maker|
       maker_obj = Maker.new(File.dirname(maker))
       World.log.debug "Found listo file '#{maker}'."
       @makers << maker_obj
