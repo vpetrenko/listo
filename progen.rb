@@ -193,6 +193,8 @@ class ProGenerator
         end
         gen_predeps.call(debug_config, 'win32')
         gen_predeps.call(debug_config, 'unix')
+        gen_predeps.call(release_config, 'win32')
+        gen_predeps.call(release_config, 'unix')
 
 
       end
