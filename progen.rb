@@ -112,9 +112,14 @@ class ProGenerator
       file.puts 'TARGET = ' + project.name
 
       cpp_files = ''
+      h_files = ''
 
       d_unix_storage.get_array(Maker::FILES_CPP).each do |f|
-        cpp_files += '    ' + f + " \\\n"
+        if Pathname.new(f).extname == '.h'
+          h_files += '    ' + f + " \\\n"
+        else
+          cpp_files += '    ' + f + " \\\n"
+        end
       end
 
       if cpp_files.length != 0
@@ -122,7 +127,6 @@ class ProGenerator
         file.puts "SOURCES += \\\n" + cpp_files + "\n\n"
       end
 
-      h_files = ''
 
       d_unix_storage.get_array(Maker::FILES_H).each { |f|
         h_files += '   ' + f + " \\\n"
