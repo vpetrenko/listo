@@ -275,6 +275,31 @@ class VS2005Generator
             end
           end
 
+          if storage.has?(Maker::FILES_UI)
+            xml.Filter :Name => 'Form Files',
+                       :Filter => 'ui',
+                       :UniqueIdentifier => '{99349809-55BA-4b9d-BF79-8FDBB0286EB3}',
+                       :ParseFiles => 'false' do
+              storage.get_array(Maker::FILES_UI).each do |ui|
+                xml.File :RelativePath => ui do
+                  @project.configurations.each_value do |conf|
+                    xml.FileConfiguration :Name => "#{conf.name}|Win32" do
+                      ui_files = ''
+                      storage.get_array(Maker::FILES_UI).each {|r| ui_files += r + ';'} if storage.has?(Maker::FILES_UI)
+                      @generated_files[conf.name] = [] unless @generated_files.key?(conf.name)
+                      @generated_files[conf.name] << "#{conf.name}\\ui_#{File.basename(ui, '.ui')}.h"
+                      xml.Tool :Name => "VCCustomBuildTool",
+                        :AdditionalDependencies => "#{ui};#{qt_bin_path}\\uic.exe",
+                        :CommandLine => "#{qt_bin_path}\\uic.exe #{ui} -o #{conf.name}\\ui_#{File.basename(ui, '.ui')}.h",
+                        :Description => "UIC #{ui}",
+                        :Outputs => "#{conf.name}\\ui_#{File.basename(ui, '.ui')}.h",
+                        :Path => qt_bin_path
+                    end
+                  end
+                end
+              end
+            end
+          end
 #              <File
 #                  RelativePath="OpsDemo5.qrc">
 #                  <FileConfiguration
