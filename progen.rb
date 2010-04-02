@@ -56,6 +56,10 @@ class ProGenerator
     raise "Project #{project.name} has #{project.configurations.length} configurations but must have 2 for PRO generator" if project.configurations.length != 2
 
     project_storage = ConstStorage.new
+    if is_unix()
+      project.flags.remove(Maker::WIN32_X86)
+      project.flags.add(Maker::UNIX)
+    end
     project_storage.fill(project.actions, project.flags)
 
     debug_config = nil
@@ -99,6 +103,9 @@ class ProGenerator
       end
       d_win_storage = process.call(debug_config, Maker::WIN32_X86)
       r_win_storage = process.call(release_config, Maker::WIN32_X86)
+
+      debug_config.flags.remove [Maker::WIN32_X86]
+      release_config.flags.remove [Maker::WIN32_X86]
 
       d_unix_storage = process.call(debug_config, Maker::UNIX)
       r_unix_storage = process.call(release_config, Maker::UNIX)

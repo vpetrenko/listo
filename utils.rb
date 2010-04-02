@@ -31,6 +31,10 @@ class Flags
     @flags[flag] = nil
   end
 
+  def remove_flag(flag)
+    raise "Could not remove flag which is not symbol (#{flag}, #{flag.class}})." unless flag.is_a? Symbol
+    @flags.delete(flag)
+  end
 
   def Flags.define_group(*flags)
     flgs = []
@@ -86,6 +90,24 @@ class Flags
     flags.flags_hash.each_key do |f|
       add_flag(f)
     end
+  end
+
+  def remove(*flags)
+      flags.each do |f|
+        if f.is_a? Flags
+          f.flags_hash.each_key {|k| remove_flag(k)}
+        elsif f.is_a? Array
+          f.each do |k|
+            if k.is_a? Flags
+              k.flags_hash.each_key {|kk| remove_flag(kk)}
+            else
+              remove_flag(k)
+            end
+          end
+        else
+          remove_flag(f)
+        end
+      end
   end
 
   def clear(*flags)
