@@ -143,7 +143,7 @@ class World
 #      end
     end
     @slns.each do |sln|
-      gen = Sln2005Generator.new
+      gen = Sln2005Generator.new('9.00')
       gen.generate(sln, sln.path + '/' + sln.name + '.sln')
     end
   end
@@ -160,7 +160,7 @@ class World
 #      end
     end
     @slns.each do |sln|
-      gen = Sln2005Generator.new
+      gen = Sln2005Generator.new('10.00')
       gen.generate(sln, sln.path + '/' + sln.name + '.sln')
     end
   end
