@@ -178,7 +178,7 @@ class VS2005Generator
               :MinimalRebuild => "true",
               :BasicRuntimeChecks => "3",
               :RuntimeLibrary => storage.get_value(Maker::RUNTIME_LIB),
-              :DisableLanguageExtensions => "false",
+              :DisableLanguageExtensions => storage.get_value(Maker::DISABLE_LANGUAGE_EXTENSIONS),
               :ForceConformanceInForLoopScope => "true",
               :RuntimeTypeInfo => "true",
               :UsePrecompiledHeader => "0",
