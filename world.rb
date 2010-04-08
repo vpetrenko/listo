@@ -131,14 +131,31 @@ class World
     end
   end
 
-  def build
+  def build_2005
     World.log.debug "Starting build msvs2005"
     @projects.each_value do |project|
 #      if project.flags.has? Maker::QMAKE
 #        gen_pro = ProGenerator.new
 #        gen_pro.generate_project(project, project.path + '/' + project.name + '.pro')
 #      else
-        gen = VS2005Generator.new(project)
+        gen = VS2005Generator.new(project, '8,00')
+        gen.generate_project(project, project.path + '/' + project.name + '.vcproj')
+#      end
+    end
+    @slns.each do |sln|
+      gen = Sln2005Generator.new
+      gen.generate(sln, sln.path + '/' + sln.name + '.sln')
+    end
+  end
+
+  def build_2008
+    World.log.debug "Starting build msvs2008"
+    @projects.each_value do |project|
+#      if project.flags.has? Maker::QMAKE
+#        gen_pro = ProGenerator.new
+#        gen_pro.generate_project(project, project.path + '/' + project.name + '.pro')
+#      else
+        gen = VS2005Generator.new(project, '9,00')
         gen.generate_project(project, project.path + '/' + project.name + '.vcproj')
 #      end
     end

@@ -14,11 +14,12 @@ require 'builder'
 
 
 class VS2005Generator
-  def initialize(project)
+  def initialize(project, version)
     @project = project
     @xml = nil
     @generated_files = {}
     @current_storage = nil
+    @version = version
   end
 
   def prepare_files(sources)
@@ -232,7 +233,7 @@ class VS2005Generator
       xml.instruct!
       @xml = xml
       xml.VisualStudioProject :ProjectType => 'Visual C++',
-        :Version => "8,00", :Name => project.name, :ProjectGUID => "{#{project.guid}}",
+        :Version => "#{@version}", :Name => project.name, :ProjectGUID => "{#{project.guid}}",
         :RootNamespace => project.name, :Keyword => 'Win32Proj' do
         xml.Platforms do
           xml.Platform :Name => 'Win32'
