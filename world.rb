@@ -172,7 +172,7 @@ class World
       gen_pro.generate_project(project, project.path + '/' + project.name + '.pro')
     end
     @slns.each do |sln|
-      gen = Sln2005Generator.new
+      gen = Sln2005Generator.new('10.00')
       gen.generate(sln, sln.path + '/' + sln.name + '.sln')
     end
   end
