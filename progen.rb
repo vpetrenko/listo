@@ -182,7 +182,7 @@ class ProGenerator
             if platform_name == 'win32'
               pre_libs += project.path_prefix + 'lib/win32-x86-' + config.name.downcase + '/' + d.name + ".lib \\\n"
             elsif platform_name == 'unix'
-              pre_libs += project.path_prefix + 'lib/win32-x86-' + config.name.downcase + '/lib' + d.name + ".a \\\n"
+              pre_libs += project.path_prefix + 'lib/unix-x86-' + config.name.downcase + '/lib' + d.name + ".a \\\n"
             end
           end
           if pre_libs.length != 0

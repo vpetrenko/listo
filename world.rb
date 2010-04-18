@@ -234,7 +234,7 @@ class World
   def World.postprocess_storage(project, configuration, storage)
     dict = {'PROJECT' => project.name,
             'CONFIG' => configuration.name.downcase,
-            'PLATFORM' => (is_windows() ? 'win32-x86' : 'unix'),
+            'PLATFORM' => (is_windows() ? 'win32-x86' : 'unix-x86'),
             'QTDIR' => World.get_config_variable(:qt_path)}
     storage.postprocess!(dict)
   end
