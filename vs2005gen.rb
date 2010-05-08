@@ -185,7 +185,7 @@ class VS2005Generator
               :UsePrecompiledHeader => "0",
               :ProgramDataBaseFileName => "$(OutDir)\\$(ProjectName).pdb",
               :WarningLevel => "4",
-              :Detect64BitPortabilityProblems => "true",
+#              :Detect64BitPortabilityProblems => "true",
               :DebugInformationFormat => "3",
               :AdditionalOptions => storage.get_value(Maker::CL_ADDIT_OPTIONS, '')
 
