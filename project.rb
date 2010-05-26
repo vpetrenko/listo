@@ -48,6 +48,24 @@ class Project
     deps.each {|x| @deps << x}
   end
 
+  def deps_for_gcc
+    @layers = []
+    deps.each {|p| order_help(World.instance.get_project(p))}
+    @layers.uniq!
+    @layers.reverse! if @layers.size > 0
+#    puts @layers.collect {|l| l.name}.join(' ')
+    @layers
+  end
+
+  private
+  def order_help(project)
+    project.deps.each { |p|
+      order_help(World.instance.get_project(p))
+    }
+    @layers << project
+  end
+
+  public
   def bind_deps
     World.log.debug "bind_deps for '#{name}'"
     deps_proj = {}

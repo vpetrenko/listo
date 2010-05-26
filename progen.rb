@@ -91,6 +91,30 @@ class ProGenerator
       file.puts '        QMAKE_CXXFLAGS_RELEASE += -Zc:wchar_t'
       file.puts '}'
 
+
+      file.puts 'win32 {'
+      libs = ''
+      project.dep_projects.each do |d|
+        libs += '-l' + d.name + "\\\n"
+      end
+      if libs.length != 0
+        libs = libs[0, libs.length - 2]
+        file.puts "LIBS +=\\\n" + libs + "\n\n"
+      end
+      file.puts '}'
+
+      file.puts 'unix {'
+      libs = ''
+      project.deps_for_gcc.each do |d|
+        libs += '-l' + d.name + "\\\n"
+      end
+      if libs.length != 0
+        libs = libs[0, libs.length - 2]
+        file.puts "LIBS +=\\\n" + libs + "\n\n"
+      end
+      file.puts '}'
+
+
       process = lambda do |config,flag|
         storage = ConstStorage.new
         fl = config.flags
@@ -167,15 +191,6 @@ class ProGenerator
       end  
 
       if debug_config.flags.has?(Maker::APP)
-        libs = ''
-        project.dep_projects.each do |d|
-          libs += '-l' + d.name + "\\\n"
-        end
-        if libs.length != 0
-          libs = libs[0, libs.length - 2]
-          file.puts "LIBS +=\\\n" + libs + "\n\n"
-        end
-
         gen_predeps = lambda do |config, platform_name|
           pre_libs = ''
           project.dep_projects.each do |d|
