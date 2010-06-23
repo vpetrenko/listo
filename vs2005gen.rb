@@ -187,7 +187,7 @@ class VS2005Generator
               :WarningLevel => "4",
 #              :Detect64BitPortabilityProblems => "true",
               :DebugInformationFormat => "3",
-              :AdditionalOptions => storage.get_value(Maker::CL_ADDIT_OPTIONS, '')
+              :AdditionalOptions => storage.get_value(Maker::CL_ADDIT_OPTIONS, ' ')
 
         xml.Tool :Name => "VCManagedResourceCompilerTool"
         xml.Tool :Name => "VCResourceCompilerTool", :PreprocessorDefinitions => storage.get_values(Maker::DEFINES, ',')

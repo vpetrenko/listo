@@ -46,6 +46,7 @@ class World
     @slns = []
     @@world = self
     @@loger.level = Logger::INFO
+#    @@loger.level = Logger::DEBUG
   end
 
   def run

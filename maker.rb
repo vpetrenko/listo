@@ -129,7 +129,18 @@ class Maker
     @current_project.flags.set(flags)
   end
 
+  def filesin(prefix, files)
+   	prefix = prefix + '/' if prefix[prefix.length - 1] != '/'[0]
+    files = [files].flatten
+	files.map! do |f|
+		prefix + f
+	end
+	files
+  end
+
   def fileset(include, exclude)
+    World.log.debug "fileset(#{include}, #{exclude})"
+
     current_path_name = Pathname.new(@current_project.path)
     include, exclude = [include].flatten, [exclude].flatten
     include.map! do |m|
@@ -148,6 +159,7 @@ class Maker
     (incl_files - excl_files).each do |v|
       result << Pathname.new(v).relative_path_from(current_path_name).to_s unless File.directory?(v)
     end
+    World.log.debug "end fileset()"
     result
   end
 
