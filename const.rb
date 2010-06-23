@@ -85,10 +85,12 @@ class ConstStorage
   end
 
   def each_value(name)
-    raise "Constant #{name} is not found." unless @consts.key?(name)
-    @consts[name].each do |c|
-      yield c
-    end
+#    raise "Constant #{name} is not found." unless @consts.key?(name)
+	if @consts.key?(name)
+	    @consts[name].each do |c|
+    	  yield c
+	    end
+	end
   end
 
   def get_array(name)
