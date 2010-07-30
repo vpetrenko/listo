@@ -55,6 +55,7 @@ class Maker
   FILES_QRC = :QRC
   FILES_RESOURCES = :RES
   FILES_UI = :ui
+  FILES_YAMC = :yamc
 
 #
   PARAM_OUT_DIR = 'OUT_DIR'

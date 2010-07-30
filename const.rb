@@ -116,7 +116,8 @@ class ConstStorage
         elsif v[1, 1] == ':' || v[0, 1] == '/'
           path = v
         end
-        result += quote + prefix + path + postfix + quote + separator
+        path = '.' if path.length == 0
+        result += prefix + quote + path + postfix + quote + separator
       end
     end
     if result != ''

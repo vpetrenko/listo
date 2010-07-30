@@ -88,11 +88,11 @@ class VS2005Generator
               @xml.Tool :Name => 'VCCustomBuildTool', :AdditionalDependencies => "#{decorate_path(file_path)};#{qt_moc}",
                 :CommandLine =>
                         "#{qt_moc} #{storage.get_values(Maker::DEFINES, ' ', '-D')}" \
-              " #{storage.get_decorated_paths(Maker::INCLUDE_DIRS, ' ', '-I' '', '"')}" \
+              " #{storage.get_decorated_paths(Maker::INCLUDE_DIRS, ' ', '-I', '', '"')}" \
               " #{decorate_path(file_path)} -o #{config.name}\\moc_#{File.basename(file_path, '.h')}.cpp",
                 :Description => "MOC #{File.basename(file_path)}",
                 :Outputs => "#{config.name}\\moc_#{File.basename(file_path, ".h")}.cpp",
-                :Path => qt_bin_path
+                :Path => "."
               @generated_files[config.name] = [] unless @generated_files.key?(config.name)
               @generated_files[config.name] << "#{config.name}\\moc_#{File.basename(file_path, '.h')}.cpp"
             end
