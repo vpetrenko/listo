@@ -30,7 +30,7 @@ class ProGenerator
   def out_configuration(file, storage, project, config, platform_name)
     file.puts "#{platform_name} {"
     file.puts "CONFIG(#{config.name.downcase}, debug|release) {"
-    file.puts 'INCLUDEPATH = ' + storage.get_paths(Maker::INCLUDE_DIRS, ' ', '', '', '"')
+    file.puts 'DEPENDPATH = ' + storage.get_paths(Maker::INCLUDE_DIRS, ' ', '', '', '"')
     file.puts 'DESTDIR = ' + storage.get_path(Maker::OUT_DIR)
     file.puts 'DEFINES += ' + storage.get_values(Maker::DEFINES, ' ')
     file.puts 'LIBS += ' + storage.get_paths(Maker::LIB_DIRS, ' ', '-L', '', '"')
