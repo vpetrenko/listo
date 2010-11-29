@@ -178,6 +178,26 @@ class World
     end
   end
 
+  def build_all_sln
+    cmd_file = 'build_all_sln.cmd'
+    puts "Generating #{cmd_file}..."
+    File.open(cmd_file, "w") do |file|
+#      file.puts "call \"C:/Program Files (x86)/Microsoft Visual Studio 9.0/VC/vcvarsall.bat\" x86"
+      file.puts "@echo Cleaning..."
+      @slns.each do |sln|
+        file.puts "msbuild #{sln.path}/#{sln.name}.sln /t:clean /property:Configuration=Debug"
+      end
+      file.puts "@echo Building..."
+      @slns.each do |sln|
+        file.puts "msbuild #{sln.path}/#{sln.name}.sln /property:Configuration=Debug"
+      end
+      file.puts "@echo Build finished."
+    end
+	puts "For build open MS Visual Studio 2008 Command Prompt and run #{cmd_file} with command line"
+	puts "#{cmd_file} | deps\\win32\\bin\\tee build_all.txt"
+	puts "and check build_all.txt for 'Build FAILED' lines."
+  end
+
   def self.set_config_variable(name, value)
     case name
       when :qt_path
