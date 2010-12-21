@@ -288,12 +288,12 @@ class VS2005Generator
                       ui_files = ''
                       storage.get_array(Maker::FILES_UI).each {|r| ui_files += r + ';'} if storage.has?(Maker::FILES_UI)
                       @generated_files[conf.name] = [] unless @generated_files.key?(conf.name)
-                      @generated_files[conf.name] << "#{conf.name}\\ui_#{File.basename(ui, '.ui')}.h"
+                      @generated_files[conf.name] << "ui_#{File.basename(ui, '.ui')}.h"
                       xml.Tool :Name => "VCCustomBuildTool",
                         :AdditionalDependencies => "#{ui};#{qt_bin_path}\\uic.exe",
-                        :CommandLine => "#{qt_bin_path}\\uic.exe #{ui} -o #{conf.name}\\ui_#{File.basename(ui, '.ui')}.h",
+                        :CommandLine => "#{qt_bin_path}\\uic.exe #{ui} -o ui_#{File.basename(ui, '.ui')}.h",
                         :Description => "UIC #{ui}",
-                        :Outputs => "#{conf.name}\\ui_#{File.basename(ui, '.ui')}.h",
+                        :Outputs => "ui_#{File.basename(ui, '.ui')}.h",
                         :Path => qt_bin_path
                     end
                   end
