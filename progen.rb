@@ -88,8 +88,6 @@ class ProGenerator
 
       file.puts 'win32-msvc* {'
       file.puts "        GUID = #{project.guid}"
-      file.puts '        QMAKE_CXXFLAGS_DEBUG += -Zc:wchar_t'
-      file.puts '        QMAKE_CXXFLAGS_RELEASE += -Zc:wchar_t'
       file.puts '}'
 
 
