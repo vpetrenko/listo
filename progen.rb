@@ -165,6 +165,17 @@ class ProGenerator
         h_files = h_files[0, h_files.length - 2]
         file.puts "HEADERS += \\\n" + h_files + "\n\n"
       end
+	  
+	  if project_storage.has?(Maker::FILES_OTHER)
+          other_files = ''
+        d_unix_storage.get_array(Maker::FILES_OTHER).each do |f|
+          other_files += '    ' + f + " \\\n"
+        end
+        if other_files.length != 0
+          other_files = other_files[0, other_files.length - 2]
+          file.puts "OTHER_FILES += \\\n" + other_files + "\n\n"
+        end
+	  end
 
       ui_files = ''
 
@@ -203,7 +214,8 @@ class ProGenerator
             pre_libs = pre_libs[0, pre_libs.length - 2]
             file.puts "CONFIG(#{config.name.downcase}, debug|release) {"
 
-            if platform_name == 'win32'
+
+          if platform_name == 'win32'
                file.puts "win32 {\n"
                file.puts 'PRE_TARGETDEPS += ' + pre_libs
                file.puts "}\n"

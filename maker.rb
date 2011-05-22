@@ -52,6 +52,7 @@ class Maker
   FILES_CPP = :CPP
   FILES_H = :H
   FILES_DATA = :DATA
+  FILES_OTHER = :OTHER
   FILES_QRC = :QRC
   FILES_RESOURCES = :RES
   FILES_UI = :ui
