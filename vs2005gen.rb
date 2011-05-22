@@ -250,6 +250,17 @@ class VS2005Generator
           xml.Filter :Name => 'Source Files', :Filter => 'cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx', :UniqueIdentifier => '{4FC737F1-C7A5-4376-A066-2A32D752A2FF}' do
             gen_files(xml, project, prepare_files(storage.get_array(Maker::FILES_CPP))) if storage.has?(Maker::FILES_CPP)
           end
+		  if storage.has?(Maker::FILES_OTHER)
+			xml.Filter :Name => 'Other Files', :Filter => '*', :UniqueIdentifier => '9898D5F0-8497-11E0-867C-11EE4724019B' do
+              storage.get_array(Maker::FILES_OTHER).each do |other|
+                xml.File :RelativePath => other do
+                  @project.configurations.each_value do |conf|
+                    xml.FileConfiguration :Name => "#{conf.name}|Win32", :ExcludedFromBuild => true
+                  end
+                end
+              end
+			end
+		  end
           if storage.has?(Maker::FILES_QRC)
             xml.Filter :Name => 'Resource Files',
                        :Filter => 'qrc;*',
