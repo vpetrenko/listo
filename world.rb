@@ -4,6 +4,7 @@ require 'project'
 require 'maker'
 require 'template'
 require 'vs2005gen'
+require 'vs2010gen'
 require 'sln2005gen'
 require 'progen'
 require 'uuid'
@@ -166,6 +167,19 @@ class World
     end
   end
 
+  def build_2010
+    World.log.debug "Starting build msvs2010"
+    @projects.each_value do |project|
+        gen = VS2010Generator.new(project)
+        gen.generate_project(project, project.path + '/' + project.name)
+    end
+    @slns.each do |sln|
+      gen = Sln2005Generator.new('11.00');
+      gen.generate(sln, sln.path + '/' + sln.name + '.sln')
+    end
+  end
+
+  
   def build_pro
     World.log.debug "Starting build pro"
     @projects.each_value do |project|
