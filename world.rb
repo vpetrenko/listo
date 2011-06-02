@@ -76,7 +76,7 @@ class World
     end
 
     traverse_listo.call('./**/*.listo', './source/3rd/**/*').each do	|maker|
-      maker_obj = Maker.new(File.dirname(maker))
+      maker_obj = Maker.new(maker)
       World.log.debug "Found listo file '#{maker}'."
       @makers << maker_obj
       maker_source = IO.read(maker)
@@ -220,6 +220,7 @@ class World
   def self.set_config_variable(name, value)
     case name
       when :qt_path
+	  when :add_listo_to_project
       else
       raise "Unexpected configuration variable setting '#{name}'"
     end
@@ -239,6 +240,8 @@ class World
           else
             raise "Could not determine QT path"
           end
+		when :add_listo_to_project
+		  return false
         else
           raise "Unexpected configuration variable getting '#{name}'"
       end

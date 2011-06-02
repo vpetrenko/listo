@@ -77,6 +77,10 @@ class Maker
     World.set_config_variable(:qt_path, path)
   end
   
+  def set_add_listo_to_project(val)
+    World.set_config_variable(:add_listo_to_project, val)
+  end
+  
 #   Templates
   def create_template(name)
     @current_template = Template.new(name, self)
@@ -125,6 +129,7 @@ class Maker
   def create_project(name, additional_path = '')
     @current_template = nil
     @current_project = Project.new(name, self, additional_path)
+	add(FILES_OTHER, File.basename(@listo_filename)) if World.get_config_variable(:add_listo_to_project)
   end
 
   def add_project_flags(*flags)
@@ -248,8 +253,9 @@ class Maker
 
 
 #   Instance methods
-  def initialize(path)
-	@path = path
+  def initialize(filename)
+	@listo_filename = filename
+    @path = File.dirname(filename)
     @current_template = nil
     @current_project = nil
   end
