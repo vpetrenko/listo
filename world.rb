@@ -171,7 +171,7 @@ class World
     World.log.debug "Starting build msvs2010"
     @projects.each_value do |project|
         gen = VS2010Generator.new(project)
-        gen.generate_project(project, project.path + '/' + project.name + '.vcxproj')
+        gen.generate_project(project.path + '/' + project.name + '.vcxproj')
     end
     @slns.each do |sln|
       gen = Sln2005Generator.new('11.00');

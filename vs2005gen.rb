@@ -180,6 +180,7 @@ class VS2005Generator
               :BasicRuntimeChecks => "3",
               :RuntimeLibrary => storage.get_value(Maker::RUNTIME_LIB),
               :DisableLanguageExtensions => storage.get_value(Maker::DISABLE_LANGUAGE_EXTENSIONS),
+			  :TreatWChar_tAsBuiltInType => storage.get_value(Maker::TREAT_WCHAR),
               :ForceConformanceInForLoopScope => "true",
               :RuntimeTypeInfo => "true",
               :UsePrecompiledHeader => "0",

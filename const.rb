@@ -35,6 +35,10 @@ class Const
     end
 
   end
+  
+  def to_s
+    @values.to_s
+  end
 
 end
 

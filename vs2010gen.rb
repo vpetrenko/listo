@@ -106,7 +106,7 @@ class VS2010Generator
     end
   end
   
-  def generate_filters(project, project_file_name)
+  def generate_filters(project_file_name)
     File.open(project_file_name + ".filters", "w") do |file|
       xml = Builder::XmlMarkup.new(:indent => 2, :target => file)
       xml.instruct!
@@ -133,11 +133,8 @@ class VS2010Generator
 	end
   end
 
-  def generate_project(project, file_name)
+  def generate_project(file_name)
     File.open(file_name, "w") do |file|
-      storage = ConstStorage.new
-      storage.fill(project.actions, project.flags)
-      @current_storage = storage
       xml = Builder::XmlMarkup.new(:indent => 2, :target => file)
       xml.instruct!
       @xml = xml
@@ -152,9 +149,9 @@ class VS2010Generator
 		  end
 	    end
 		xml.PropertyGroup :Label => 'Globals' do
-		  xml.RootNamespace project.name
+		  xml.RootNamespace @project.name
 		  xml.Keyword 'Win32Proj'
-		  xml.ProjectGuid "{#{project.guid}}"
+		  xml.ProjectGuid "{#{@project.guid}}"
 		end
 		xml.Import :Project => '$(VCTargetsPath)\Microsoft.Cpp.Default.props'
 		@project.configurations.each_value do |config|
@@ -180,9 +177,10 @@ class VS2010Generator
 		xml.PropertyGroup do
 		  xml._ProjectFileVersion '10.0.30319.1'
 		  @project.configurations.each_value do |conf|
-		    storage = ConstStorage.new
             flags = conf.flags
             flags.set(Maker::WIN32_X86)
+
+			storage = ConstStorage.new
             storage.path = @project.path_prefix
             storage.fill(@project.actions, flags)
             storage.fill(conf.actions, flags)
@@ -198,43 +196,48 @@ class VS2010Generator
 		end
 
 		@project.configurations.each_value do |conf|
-		  storage = ConstStorage.new
           flags = conf.flags
           flags.set(Maker::WIN32_X86)
-          storage.path = @project.path_prefix
-          storage.fill(@project.actions, flags)
-          storage.fill(conf.actions, flags)
-          World.postprocess_storage(@project, conf, storage)
+
+		  conf_storage = ConstStorage.new
+          conf_storage.path = @project.path_prefix
+          conf_storage.fill(@project.actions, flags)
+          conf_storage.fill(conf.actions, flags)
+          World.postprocess_storage(@project, conf, conf_storage)
+		  
+		  #puts conf_storage.to_s
 
 		  xml.ItemDefinitionGroup :Condition => "'$(Configuration)|$(Platform)'=='#{conf.name}|Win32'" do
 		    xml.ClCompile do
-              xml.RuntimeLibrary storage.get_value(Maker::RUNTIME_LIB) == Maker::RELEASE_DLL ? 'MultiThreadedDLL' : 'MultiThreadedDebugDLL'
+              xml.RuntimeLibrary conf_storage.get_value(Maker::RUNTIME_LIB) == Maker::RELEASE_DLL ? 'MultiThreadedDLL' : 'MultiThreadedDebugDLL'
               xml.DebugInformationFormat 'ProgramDatabase'
               xml.ForceConformanceInForLoopScope true
               xml.Optimization 'Disabled'
-              xml.AdditionalIncludeDirectories storage.get_decorated_paths(Maker::INCLUDE_DIRS, ';') + ";%(AdditionalIncludeDirectories)"
-              xml.AdditionalOptions storage.get_value(Maker::CL_ADDIT_OPTIONS, ' ') + ' %(AdditionalOptions)'
-              xml.PreprocessorDefinitions storage.get_values(Maker::DEFINES, ';') + ';%(PreprocessorDefinitions)'
+              xml.AdditionalIncludeDirectories conf_storage.get_decorated_paths(Maker::INCLUDE_DIRS, ';') + ";%(AdditionalIncludeDirectories)"
+              xml.AdditionalOptions conf_storage.get_value(Maker::CL_ADDIT_OPTIONS, ' ') + ' %(AdditionalOptions)'
+              xml.PreprocessorDefinitions conf_storage.get_values(Maker::DEFINES, ';') + ';%(PreprocessorDefinitions)'
               xml.RuntimeTypeInfo true
               xml.StringPooling true
-              xml.DisableLanguageExtensions false # storage.get_value(Maker::DISABLE_LANGUAGE_EXTENSIONS)
+			  # Here we have to explicitly enable language extensions because of bugs in VC2010 STL
+              xml.DisableLanguageExtensions false # conf_storage.get_value(Maker::DISABLE_LANGUAGE_EXTENSIONS)
               xml.PrecompiledHeader
               xml.MinimalRebuild true
               xml.ProgramDataBaseFileName '$(OutDir)$(ProjectName).pdb'
               xml.BasicRuntimeChecks 'EnableFastChecks'
               xml.WarningLevel 'Level4'
+			  xml.TreatWChar_tAsBuiltInType conf_storage.get_values(Maker::TREAT_WCHAR, '')
 			end
 			xml.ResourceCompile do
-			  xml.PreprocessorDefinitions storage.get_values(Maker::DEFINES, ';') + ';%(PreprocessorDefinitions)'
+			  xml.PreprocessorDefinitions conf_storage.get_values(Maker::DEFINES, ';') + ';%(PreprocessorDefinitions)'
 			end
 
 			if conf.flags.has?(Maker::APP)
 			  xml.Link do
-			    xml.AdditionalLibraryDirectories storage.get_decorated_paths(Maker::LIB_DIRS, ';') + ';%(AdditionalLibraryDirectories)'
+			    xml.AdditionalLibraryDirectories conf_storage.get_decorated_paths(Maker::LIB_DIRS, ';') + ';%(AdditionalLibraryDirectories)'
                 xml.TargetMachine 'MachineX86'
-                xml.AdditionalOptions storage.get_values(Maker::LINK_ADDIT_OPTIONS, '') + ' %(AdditionalOptions)'
-                xml.OutputFile storage.get_decorated_path(Maker::OUT_FILE, storage.get_decorated_path(Maker::OUT_DIR), '.exe')
-                xml.AdditionalDependencies decorate_path(storage.get_values(Maker::DEPS, ';', '', '.lib')) + ';%(AdditionalDependencies)'
+                xml.AdditionalOptions conf_storage.get_values(Maker::LINK_ADDIT_OPTIONS, '') + ' %(AdditionalOptions)'
+                xml.OutputFile conf_storage.get_decorated_path(Maker::OUT_FILE, conf_storage.get_decorated_path(Maker::OUT_DIR), '.exe')
+                xml.AdditionalDependencies decorate_path(conf_storage.get_values(Maker::DEPS, ';', '', '.lib')) + ';%(AdditionalDependencies)'
                 xml.GenerateDebugInformation true
 			  end
 			end
@@ -242,14 +245,15 @@ class VS2010Generator
 			if conf.flags.has?(Maker::LIB)
 			  xml.Lib do
 			    xml.IgnoreAllDefaultLibraries true
-                xml.OutputFile storage.get_decorated_path(Maker::OUT_FILE, storage.get_decorated_path(Maker::OUT_DIR), '.lib')
+                xml.OutputFile conf_storage.get_decorated_path(Maker::OUT_FILE, conf_storage.get_decorated_path(Maker::OUT_DIR), '.lib')
 			  end
 			end
 		  end
 		end
 		
 		storage = ConstStorage.new
-        storage.fill(project.actions, project.flags)
+        storage.fill(@project.actions, @project.flags)
+		@current_storage = storage
 
 		if storage.has?(Maker::FILES_UI)
 		  @filter_props['Form Files'] = {'UniqueIdentifier' => '{99349809-55BA-4b9d-BF79-8FDBB0286EB3}', 'Extensions' => 'ui'}
@@ -275,7 +279,7 @@ class VS2010Generator
 
 		xml.ItemGroup do
 		  @filter_props['Header Files'] = {'UniqueIdentifier' => '{93995380-89BD-4b04-88EB-625FBE52EBFB}', 'Extensions' => 'h;hpp;hxx;hm;inl;inc;xsd'}
-		  gen_files(xml, project, prepare_files(storage.get_array(Maker::FILES_H))) if storage.has?(Maker::FILES_H)
+		  gen_files(xml, @project, prepare_files(storage.get_array(Maker::FILES_H))) if storage.has?(Maker::FILES_H)
           if !@generated_files.empty?
             @generated_files[@generated_files.keys[0]].each do |path|
 			  if File.extname(path) == '.h'
@@ -313,7 +317,7 @@ class VS2010Generator
 		
 		xml.ItemGroup do
 		  @filter_props['Source Files'] = {'UniqueIdentifier' => '{4FC737F1-C7A5-4376-A066-2A32D752A2FF}', 'Extensions' => 'cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx'}
-		  gen_files(xml, project, prepare_files(storage.get_array(Maker::FILES_CPP))) if storage.has?(Maker::FILES_CPP)
+		  gen_files(xml, @project, prepare_files(storage.get_array(Maker::FILES_CPP))) if storage.has?(Maker::FILES_CPP)
  
           if !@generated_files.empty?
 		    @filter_props['Generated Files'] = {'UniqueIdentifier' => '{71ED8ED8-ACB9-4CE9-BBE1-E00B30144E11}', 'Extensions' => 'cpp;c;cxx;moc;h;def;odl;idl;res'}
@@ -345,9 +349,9 @@ class VS2010Generator
 	  end
 	end
 	
-	generate_filters(project, file_name)
+	generate_filters(file_name)
 
-    puts "MSVC Project '#{project.name}' generated at '#{file_name}'"
+    puts "MSVC Project '#{@project.name}' generated at '#{file_name}'"
   end
 
 end
