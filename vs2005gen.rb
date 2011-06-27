@@ -172,12 +172,12 @@ class VS2005Generator
         xml.Tool :Name => "VCWebServiceProxyGeneratorTool"
         xml.Tool :Name => "VCMIDLTool"
         xml.Tool :Name => "VCCLCompilerTool",
-              :Optimization => "0",
+              :Optimization => config.name == 'Debug' ? '0' : '2',
               :AdditionalIncludeDirectories => storage.get_decorated_paths(Maker::INCLUDE_DIRS, ',', '', '', '"'),
               :PreprocessorDefinitions => storage.get_values(Maker::DEFINES, ';'),
               :StringPooling => "true",
               :MinimalRebuild => "true",
-              :BasicRuntimeChecks => "3",
+              :BasicRuntimeChecks => config.name == 'Debug' ? '3' : '0',
               :RuntimeLibrary => storage.get_value(Maker::RUNTIME_LIB),
               :DisableLanguageExtensions => storage.get_value(Maker::DISABLE_LANGUAGE_EXTENSIONS),
 			  :TreatWChar_tAsBuiltInType => storage.get_value(Maker::TREAT_WCHAR),
