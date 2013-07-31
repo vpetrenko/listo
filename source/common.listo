@@ -1,0 +1,109 @@
+# Example of common template for project
+create_template 'Common'
+
+# Here are some definitions
+# Each template define consists of
+# Name  -- just UPPER_CASE identifier
+# Value -- it may be string or several string divided by ,
+# [Tag] -- optional tag which guide usage of definition (like for APP or LIB build configuration)
+
+template_add OUT_DIR, '$lib/<%=PLATFORM%>-<%=CONFIG%>/', LIB
+template_add OUT_DIR, './bin/<%=PLATFORM%>-<%=CONFIG%>/', APP
+template_add TEMP_DIR, '$temp/<%=PLATFORM%>-<%=CONFIG%>/<%=PROJECT%>'
+template_add INCLUDE_DIRS, '$include', '$deps/include', '$deps/include/antlr-3.2'
+# LLVM from deps vs 2.9
+template_add INCLUDE_DIRS, "$source/3rd/LLVM/include", "$source/3rd/LLVM/tools/clang/include"
+#template_add INCLUDE_DIRS, "$source/3rd/llvm-2.9/include", "$source/3rd/llvm-2.9/tools/clang/include"
+
+template_add OUT_FILE, '<%=PROJECT%>'
+
+template_add LIB_DIRS, '$deps/win32/lib/', WIN32_X86
+
+# LLVM & Clang library directories
+# LLVM from deps vs 2.9
+template_add LIB_DIRS, '$deps/win32/lib/llvm-debug', WIN32_X86, DEBUG
+template_add LIB_DIRS, '$deps/win32/lib/llvm-release', WIN32_X86, RELEASE
+#template_add LIB_DIRS, '$source/3rd/llvm-2.9/lib/Debug', WIN32_X86, DEBUG
+#template_add LIB_DIRS, '$source/3rd/llvm-2.9/lib/Release', WIN32_X86, RELEASE
+template_add LIB_DIRS, '$deps/unix/lib/', UNIX
+template_add DEFINES, 'OPS_LOCALE=0'
+template_add DEFINES, '_LIB', LIB
+template_add DEFINES, 'WIN32', WIN32_X86
+template_add DEFINES, '_DEBUG', DEBUG
+template_add DEFINES, 'NDEBUG', RELEASE
+
+template_add SUBSYS, SUBSYS_CONSOLE
+template_add RUNTIME_LIB, DEBUG_DLL, DEBUG
+template_add RUNTIME_LIB, RELEASE_DLL, RELEASE
+
+template_add DISABLE_LANGUAGE_EXTENSIONS, 'true'
+
+# ANTLR v3
+template_add DEPS, 'antlr-3.2-ops-debug', DEBUG
+template_add DEPS, 'antlr-3.2-ops', RELEASE
+
+template_add DEPS, 'clangFrontend', 'clangEdit', 'clangLex', 'clangSema', 'clangAnalysis', 'clangAST',
+	'clangDriver', 'clangParse', 'clangRewrite', 'clangBasic', 'clangSerialization',
+	'LLVMCore', 'LLVMMC',	'LLVMSupport'
+
+# Advapi is required by clangFrontend
+template_add DEPS, 'Advapi32', WIN32_X86
+# Shell32 is required by LLVMSupport
+template_add DEPS, 'Shell32', WIN32_X86
+
+template_add DEFINES, 'OPS_NATIVE_WCHAR_T=0', WIN32_X86
+template_add LINK_ADDIT_OPTIONS, ''
+template_add TREAT_WCHAR, 'false', WIN32_X86
+
+# Template to include general Qt libraries to project
+create_template 'Qt'
+template_add GENERATOR_TARGET, 'Qt'
+template_add GENERATOR_COMPONENTS_ADD, 'core'
+template_add GENERATOR_COMPONENTS_REMOVE, 'gui'
+
+template_add INCLUDE_DIRS, '<%=QTDIR%>/include/QtCore', '<%=QTDIR%>/include',
+                           '<%=QTDIR%>/mkspecs/default', WIN32_X86
+template_add DEFINES, 'UNICODE','QT_DLL','QT_CORE_LIB','QT_THREAD_SUPPORT'
+template_add DEFINES, '_WINDOWS', 'QT_LARGEFILE_SUPPORT', WIN32_X86
+template_add DEFINES, 'QT_NO_DEBUG', RELEASE
+
+template_add DEPS, '<%=QTDIR%>/lib/qtmaind', '<%=QTDIR%>/lib/QtCored4', WIN32_X86, DEBUG
+template_add DEPS, '<%=QTDIR%>/lib/qtmain', '<%=QTDIR%>/lib/QtCore4', WIN32_X86, RELEASE
+template_add LIB_DIRS, '<%=QTDIR%>/lib'
+
+template_add CL_ADDIT_OPTIONS, '-Zm200 -w34100 -w34189 -w34100 -w34189 -wd4127 -wd4512'
+
+
+create_template 'QtGui'
+use_template 'Qt'
+template_add GENERATOR_COMPONENTS_ADD, 'gui'
+template_clear GENERATOR_COMPONENTS_REMOVE
+template_add INCLUDE_DIRS, '<%=QTDIR%>/include/QtGui', '<%=QTDIR%>/include/ActiveQt',  WIN32_X86
+template_add DEFINES, 'QT_GUI_LIB'
+template_add SUBSYS, SUBSYS_GUI
+
+template_add DEPS, '<%=QTDIR%>/lib/QtGuid4', WIN32_X86, DEBUG
+template_add DEPS, '<%=QTDIR%>/lib/QtGui4', WIN32_X86, RELEASE
+
+template_add LINK_ADDIT_OPTIONS, "\"/MANIFESTDEPENDENCY:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' publicKeyToken='6595b64144ccf1df' language='*' processorArchitecture='*'\""
+
+create_template 'QtXml'
+template_add GENERATOR_COMPONENTS_ADD, 'xml'
+template_add INCLUDE_DIRS, '<%=QTDIR%>/include/QtXml', '<%=QTDIR%>/include/QtXmlPatterns', WIN32_X86
+template_add DEFINES, 'QT_XML_LIB'
+template_add DEPS, '<%=QTDIR%>/lib/QtXmld4', '<%=QTDIR%>/lib/QtXmlPatternsd4', WIN32_X86, DEBUG
+template_add DEPS, '<%=QTDIR%>/lib/QtXml4', '<%=QTDIR%>/lib/QtXmlPatterns4', WIN32_X86, RELEASE
+
+create_template 'QtSvg'
+template_add GENERATOR_COMPONENTS_ADD, 'svg'
+template_add INCLUDE_DIRS, '<%=QTDIR%>/include/QtSvg', WIN32_X86
+template_add DEFINES, 'QT_SVG_LIB'
+template_add DEPS, '<%=QTDIR%>/lib/QtSvgd4', WIN32_X86, DEBUG
+template_add DEPS, '<%=QTDIR%>/lib/QtSvg4', WIN32_X86, RELEASE
+
+create_template 'QtScript'
+template_add GENERATOR_COMPONENTS_ADD, 'script'
+template_add INCLUDE_DIRS, '<%=QTDIR%>/include/QtScript', WIN32_X86
+template_add DEFINES, 'QT_SCRIPT_LIB'
+template_add DEPS, '<%=QTDIR%>/lib/QtScriptd4', WIN32_X86, DEBUG
+template_add DEPS, '<%=QTDIR%>/lib/QtScript4', WIN32_X86, RELEASE

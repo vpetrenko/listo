@@ -1,0 +1,103 @@
+# Exmple of Project definition
+create_project 'Reprise'
+use_template 'Common'
+
+# It's possible to recursively add project files by mask
+#add_cpp_files '.', '*', ['testmod']
+#add_h_files '../../include/Reprise/', '*'
+
+#add FILES_CPP, fileset('./**/*.cpp', ['./testmod/*', './C2R_test/*'])
+
+# or you can exlicitly point to project files
+add FILES_CPP, %w{
+	Common.cpp
+	Declarations.cpp
+	Expressions.cpp
+	Layouts.cpp
+	Lifetime.cpp
+	ProgramFragment.cpp
+	ServiceFunctions.cpp
+	Statements.cpp
+	Types.cpp
+	Units.cpp
+	Utils.cpp
+
+	Canto/HirCExpressions.cpp
+	Canto/HirCTypes.cpp
+	Canto/HirCUtils.cpp
+	Canto/HirFExpressions.cpp
+	Canto/HirFTypes.cpp
+
+	Service/DeepWalker.cpp
+	Service/Marker.cpp
+	Service/WalkerBase.cpp
+}
+
+# Explicit list of header files for project
+add FILES_H, filesin('../../include/Reprise/', %w{
+	Collections.h
+	Common.h
+	Declarations.h
+	Exceptions.h
+	Expressions.h
+	Layouts.h
+	Lifetime.h
+	ParserResult.h
+	ProgramFragment.h
+	Reprise.h
+	ServiceFunctions.h
+	Statements.h
+	Types.h
+	Units.h
+	Utils.h
+
+	Canto/HirCExpressions.h
+	Canto/HirCTypes.h
+	Canto/HirCUtils.h
+	Canto/HirFExpressions.h
+	Canto/HirFTypes.h
+
+	Service/DeepWalker.h
+	Service/Marker.h
+	Service/Service.h
+	Service/WalkerBase.h
+})
+
+# Create two project configurations. Project is a static library.
+create_config 'Debug', DEBUG, LIB
+create_config 'Release', RELEASE, LIB
+
+# Describes dependencies to other projects
+add_deps 'OPS_Core'
+
+# Auxiliary project for test
+create_project 'Reprise_test', 'testmod'
+use_template 'Common'
+
+add FILES_CPP, %w{
+	c2r.cpp
+	FullUnrollFor.cpp
+	main.cpp
+	StatementsList.cpp
+	TestCollections.cpp
+	TrackPtrTest.cpp
+}
+
+add FILES_H, %w{
+	c2r.h
+	NodeCollector.h
+	Tests.h
+}
+
+# This project have two configurations and it's an executable app.
+create_config 'Debug', DEBUG, APP
+create_config 'Release', RELEASE, APP
+
+add_deps 'Reprise', 'Frontend', 'Backends'
+
+
+# Solution based on main project and also includes auxiliary project
+create_solution 'Reprise'
+solution_add 'Reprise_test'
+
+
