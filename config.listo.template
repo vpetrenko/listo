@@ -1,0 +1,13 @@
+####################################################
+# To target listo with particular configuration, copy this file as 
+# 'config.listo':
+# 
+#   cp config.listo.template config.listo
+#
+# and change parameters to you environment.
+#
+# WARNING. Use forward slashes (/) to divide path entries.
+#
+
+set_qt_path 'C:/Qt/4.7.1'
+set_add_listo_to_project false
